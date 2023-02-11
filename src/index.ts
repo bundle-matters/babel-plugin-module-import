@@ -4,6 +4,7 @@ import {
   addDefault, addNamed, addNamespace, addSideEffect,
   ImportOptions,
 } from '@babel/helper-module-imports';
+import assert from 'assert';
 
 export interface PluginOptions extends Partial<ImportOptions> {
   libraryName: string;
@@ -18,11 +19,18 @@ export default function moduleImport(): PluginObj {
     visitor: {
       ImportDeclaration(path: NodePath<t.ImportDeclaration>, pass: PluginPass) {
         const { libraryName, importType, importedSource, name, ...restOpts } = pass.opts as PluginOptions;
+
+        assert(libraryName, '`libraryName` is required');
+        assert(importedSource, '`importedSource` is required');
+        assert(importType, '`importType` is required');
+
         const importedName = typeof path.node.source === 'string'
           ? path.node.source
           : path.node.source.value;
+
         if (importedName === libraryName) {
           if (importType === 'named') {
+            assert(name, '`name` is required when `importType` is named');
             addNamed(path, name, importedSource, restOpts);
           } else if (importType === 'default') {
             addDefault(path, importedSource, restOpts);
